@@ -18,16 +18,18 @@ Built with Go using [nyaruka/phonenumbers](https://github.com/nyaruka/phonenumbe
 
 Download the latest release from the [Releases page](../../releases).
 
+### Install with Go
+
+```bash
+go install github.com/stevemurr/reverse-phone-lookup@latest
+```
+
+The binary will be installed to `$GOPATH/bin` (usually `~/go/bin`). Make sure it's in your PATH.
+
 ### Build from source
 
 ```bash
-go install github.com/murr/reverse-phone-lookup@latest
-```
-
-Or clone and build:
-
-```bash
-git clone https://github.com/murr/reverse-phone-lookup.git
+git clone https://github.com/stevemurr/reverse-phone-lookup.git
 cd reverse-phone-lookup
 go build -o lookup .
 ```

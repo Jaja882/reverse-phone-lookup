@@ -1,4 +1,4 @@
-module github.com/murr/reverse-phone-lookup
+module github.com/stevemurr/reverse-phone-lookup
 
 go 1.25.4
 
