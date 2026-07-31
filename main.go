@@ -452,7 +452,13 @@ func openBrowser(url string) error {
 	case "windows":
 		cmd = exec.Command("cmd", "/c", "start", "", url)
 	default:
-		cmd = exec.Command("xdg-open", url)
+		if _, err := exec.LookPath("xdg-open"); err == nil {
+			cmd = exec.Command("xdg-open", url)
+		} else if _, err := exec.LookPath("python3"); err == nil {
+			cmd = exec.Command("python3", "-m", "webbrowser", url)
+		} else {
+			return fmt.Errorf("no browser opener available: install xdg-open or python3")
+		}
 	}
 	return cmd.Start()
 }
