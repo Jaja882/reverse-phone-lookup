@@ -8,7 +8,9 @@ import (
 	"net/http"
 	"net/url"
 	"os"
+	"os/exec"
 	"regexp"
+	"runtime"
 	"strings"
 	"time"
 
@@ -23,18 +25,18 @@ var tollFreePrefixes = map[string]bool{
 
 // PhoneResult holds all lookup information
 type PhoneResult struct {
-	Input         string   `json:"input"`
-	E164          string   `json:"e164"`
-	International string   `json:"international"`
-	National      string   `json:"national"`
-	CountryCode   int32    `json:"country_code"`
-	NationalNum   uint64   `json:"national_number"`
-	Valid         bool     `json:"valid"`
-	Possible      bool     `json:"possible"`
-	Type          string   `json:"type"`
-	Carrier       string   `json:"carrier,omitempty"`
-	Location      string   `json:"location,omitempty"`
-	Timezones     []string `json:"timezones,omitempty"`
+	Input         string    `json:"input"`
+	E164          string    `json:"e164"`
+	International string    `json:"international"`
+	National      string    `json:"national"`
+	CountryCode   int32     `json:"country_code"`
+	NationalNum   uint64    `json:"national_number"`
+	Valid         bool      `json:"valid"`
+	Possible      bool      `json:"possible"`
+	Type          string    `json:"type"`
+	Carrier       string    `json:"carrier,omitempty"`
+	Location      string    `json:"location,omitempty"`
+	Timezones     []string  `json:"timezones,omitempty"`
 	Spam          *SpamInfo `json:"spam,omitempty"`
 }
 
@@ -404,7 +406,7 @@ func printResult(result *PhoneResult, asJSON bool) {
 	}
 }
 
-func printDorks(parsed *phonenumbers.PhoneNumber, openBrowser bool) {
+func printDorks(parsed *phonenumbers.PhoneNumber, openInBrowser bool, showURLs bool) {
 	dorks := generateDorks(parsed)
 
 	fmt.Println()
@@ -423,16 +425,36 @@ func printDorks(parsed *phonenumbers.PhoneNumber, openBrowser bool) {
 		for _, dork := range catDorks {
 			fmt.Printf("  %s:\n", dork.Description)
 			fmt.Printf("    %s\n", dork.Query)
-			if openBrowser {
+			if showURLs {
+				fmt.Printf("    URL: %s\n", buildSearchURL(dork.Query))
+			}
+			if openInBrowser {
 				urls = append(urls, buildSearchURL(dork.Query))
 			}
 		}
 	}
 
-	if openBrowser && len(urls) > 0 {
+	if openInBrowser && len(urls) > 0 {
 		fmt.Printf("\nOpening searches in browser...\n")
-		fmt.Println("(Note: Browser opening not implemented in Go version - copy URLs manually)")
+		for _, url := range urls {
+			if err := openBrowser(url); err != nil {
+				fmt.Fprintf(os.Stderr, "Failed to open browser for %s: %v\n", url, err)
+			}
+		}
 	}
+}
+
+func openBrowser(url string) error {
+	var cmd *exec.Cmd
+	switch runtime.GOOS {
+	case "darwin":
+		cmd = exec.Command("open", url)
+	case "windows":
+		cmd = exec.Command("cmd", "/c", "start", "", url)
+	default:
+		cmd = exec.Command("xdg-open", url)
+	}
+	return cmd.Start()
 }
 
 func buildSearchURL(query string) string {
@@ -450,6 +472,7 @@ func main() {
 	countryCode := flag.String("c", "", "ISO country code (e.g., US, GB, DE) for numbers without + prefix")
 	asJSON := flag.Bool("j", false, "Output result as JSON")
 	osint := flag.Bool("o", false, "Show OSINT search queries (Google dorks)")
+	urls := flag.Bool("u", false, "Print OSINT Google search URLs (use with -o)")
 	search := flag.Bool("s", false, "Open OSINT searches in browser (use with -o)")
 	spam := flag.Bool("spam", false, "Check if number is likely spam/scam")
 
@@ -483,6 +506,6 @@ func main() {
 	}
 
 	if *osint && !*asJSON && parsed != nil {
-		printDorks(parsed, *search)
+		printDorks(parsed, *search, *urls)
 	}
 }

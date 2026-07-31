@@ -82,6 +82,7 @@ Reasons:
 | `-j` | Output as JSON |
 | `-spam` | Run spam analysis (includes online lookup) |
 | `-o` | Show OSINT Google dork queries |
+| `-u` | Print OSINT Google search URLs (use with -o) |
 | `-s` | Open searches in browser (use with -o) |
 
 ## Spam Scoring
